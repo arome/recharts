@@ -252,6 +252,7 @@ const computeData = ({
   iterations,
   nodeWidth,
   nodePadding,
+  notRelaxed,
 }: {
   data: SankeyData;
   width: number;
@@ -259,6 +260,7 @@ const computeData = ({
   iterations: any;
   nodeWidth: number;
   nodePadding: number;
+  notRelaxed: boolean;
 }): {
   nodes: SankeyNode[];
   links: SankeyLink[];
@@ -272,13 +274,12 @@ const computeData = ({
 
   let alpha = 1;
   for (let i = 1; i <= iterations; i++) {
-    relaxRightToLeft(tree, depthTree, newLinks, (alpha *= 0.99));
-
-    resolveCollisions(depthTree, height, nodePadding);
-
-    relaxLeftToRight(tree, depthTree, newLinks, alpha);
-
-    resolveCollisions(depthTree, height, nodePadding);
+    if (!notRelaxed) {
+      relaxRightToLeft(tree, depthTree, newLinks, (alpha *= 0.99));
+      resolveCollisions(depthTree, height, nodePadding);
+      relaxLeftToRight(tree, depthTree, newLinks, alpha);
+      resolveCollisions(depthTree, height, nodePadding);
+    }
   }
 
   updateYOfLinks(tree, newLinks);
@@ -379,6 +380,8 @@ interface SankeyProps {
   onMouseEnter?: any;
 
   onMouseLeave?: any;
+
+  notRelaxed?: boolean;
 }
 
 type Props = SVGProps<SVGElement> & SankeyProps;
@@ -421,7 +424,7 @@ export class Sankey extends PureComponent<Props, State> {
   };
 
   static getDerivedStateFromProps(nextProps: Props, prevState: State): State {
-    const { data, width, height, margin, iterations, nodeWidth, nodePadding } = nextProps;
+    const { data, width, height, margin, iterations, nodeWidth, nodePadding, notRelaxed } = nextProps;
 
     if (
       data !== prevState.prevData ||
@@ -441,6 +444,7 @@ export class Sankey extends PureComponent<Props, State> {
         iterations,
         nodeWidth,
         nodePadding,
+        notRelaxed,
       });
 
       return {
